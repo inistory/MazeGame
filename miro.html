@@ -1,0 +1,169 @@
+<html>
+<head>
+<title>Maze</title>
+<script src="mazegenerator.js"></script>
+</head>
+<body>
+
+<canvas id="canvas" width=500 height=500></canvas>
+<script>
+
+    var length = prompt("세로(1~20): \n");
+    var width = prompt("가로(1~20): \n");
+    var time = 0;
+    
+    var disp = newMaze(length,width);//make maze
+
+    var canvas;
+    var ctx;
+    var color = "yellow";
+
+    var x = 7;
+    var y = 7;
+
+    var keyPressed = [];
+
+    window.onload = function() {
+        canvas = document.getElementById("canvas");
+        if (canvas == null || canvas.getContext == null) return;
+        ctx = canvas.getContext("2d");
+        //initialize maze
+        drawMaze();
+        draw();
+        setInterval(update, 30);
+    }
+    window.onkeydown = function(e) {
+        keyPressed[e.keyCode] = true;
+    }
+    window.onkeyup = function(e) {
+        keyPressed[e.keyCode] = false;
+    }
+    function canMoveTo(destX, destY) {
+        var imgData = ctx.getImageData(destX, destY, 10, 10);
+        var data = imgData.data;
+        var canMove = 1; // 1 means: the rectangle can move
+        for (var i = 0; i < 4 * 10 * 10; i += 4) { // look at all pixels
+            if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 0) { // black
+                return 0; // 0 means: the rectangle can't move
+            }
+            else if(data[i] === 255 && data[i + 1] === 0 && data[i + 2] === 0){ //goal position (red)
+                return 2;
+            }
+        }
+        return 1;
+    }
+
+    function update() {
+        var press = false;
+        var newX = x;
+        var newY = y;
+
+        //memorize previous x,y position for rectangle after update
+        var prevX = x;
+        var prevY = y;
+    
+        if (keyPressed[38]) {
+            newY = newY - 3;
+            press = true;
+        }
+        else if (keyPressed[40]) {
+            newY = newY + 3;
+            press = true;
+        }
+        else if (keyPressed[37]) {
+            newX = newX - 3;
+            press = true;
+        }
+        else if (keyPressed[39]) {
+            newX = newX + 3;
+            press = true;
+        }
+        movingAllowed = canMoveTo(newX,newY);
+
+        //update interval = 30, for every update time increment by 30
+        time += 30;
+
+        if(movingAllowed===1){ //계속 진행(움직일수있음)
+            x = newX;
+            y = newY;
+            draw(prevX,prevY); //이전것을 지우기 위해 draw로 넣음+새로운 것을 그림
+        }
+        else if(movingAllowed === 2){ //종료시
+            //clear canvas
+            makeWhite(0, 0, canvas.width, canvas.height);
+            time = time / 1000;
+            ctx.font = "50px Arial";
+            ctx.fillStyle = "blue";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            //print the time spent
+            ctx.fillText(time.toString()+" s", canvas.width / 2, canvas.height / 2);
+        }
+    }
+
+    function makeWhite(x, y, w, h) {
+        //fill certain area with white
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.closePath();
+        ctx.fillStyle = "white";
+        ctx.fill();
+    }
+
+    function draw(prevX,prevY) {
+
+        makeWhite(prevX,prevY,10,10); //erase previous rectangle
+        ctx.beginPath();
+        ctx.strokeStyle = "red";
+        ctx.fillStyle = "blue";
+        ctx.fillRect(x,y,10,10); //draw rectangle in new x,y position
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    function drawMaze(){
+        //clear canvas
+        makeWhite(0,0,canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "black";
+        for (var i = 0; i < disp[0].length; i++){
+            for (var j = 0; j <disp.length; j++){
+                if (disp[j][i][0]==0){ //위
+                    ctx.moveTo(i*24,j*24);
+                    ctx.lineTo(i*24+24,j*24);
+
+                }
+                if (disp[j][i][1]==0){ //오
+                    ctx.moveTo(i*24+24,j*24);
+                    ctx.lineTo(i*24+24,j*24+24);
+ 
+                }
+                if (disp[j][i][2]==0){ //아래
+                    ctx.moveTo(i*24+24,j*24+24);
+                    ctx.lineTo(i*24,j*24+24);
+
+                }
+                if (disp[j][i][3]==0){ //왼
+                    ctx.moveTo(i*24,j*24+24);
+                    ctx.lineTo(i*24,j*24);
+                }
+            }
+        }
+
+        ctx.stroke();
+        ctx.closePath();
+
+        //goal
+        ctx.beginPath();
+        ctx.fillStyle = "red";
+        ctx.fillText("Exit",disp[0].length*24-20, disp.length*24-7)
+        ctx.closePath();
+
+        
+    }
+
+</script>
+
+</body>
+</html>
