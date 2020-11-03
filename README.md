@@ -1,4 +1,4 @@
-# MazeGame
+# Maze Game
 MazeGame_html/css/javascript
 
 1. maze of walls, implementation of the player character in a way to paint using the canvas, should draw using a canvas.
